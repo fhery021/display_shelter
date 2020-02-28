@@ -117,7 +117,7 @@ public class HomeFragment extends Fragment {
 
             if (pairedDevices.size() > 0) {
                 for (BluetoothDevice pairedDevice : pairedDevices) {
-                    if (pairedDevice.getName().equals("MY_DEVICE_NAME")) {
+                    if (pairedDevice.getName().equals("Portrait2-83979A")) {
                         bluetoothDevice = pairedDevice;
                         lblPrinterName.setText("Attached device name: " + pairedDevice.getName()); // TODO
                         break;

@@ -12,8 +12,13 @@
         <TextView android:id="@+id/lbl"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Attach Printer"
+            android:text="Attach Device"
             android:padding="5dp"/>
+<!--        <Spinner-->
+<!--            android:id="@+id/devices_spinner"-->
+<!--            android:layout_width="fill_parent"-->
+<!--            android:layout_height="wrap_content" />-->
+
         <TextView android:id="@+id/lblPrinterName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
