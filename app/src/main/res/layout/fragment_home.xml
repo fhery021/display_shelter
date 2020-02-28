@@ -4,16 +4,41 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/text_home"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:textAlignment="center"
-        android:textSize="20sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:orientation="vertical">
+
+        <TextView android:id="@+id/lbl"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Attach Printer"
+            android:padding="5dp"/>
+        <TextView android:id="@+id/lblPrinterName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="5dp"
+            android:text="Printer Name"/>
+        <EditText android:id="@+id/txtText"
+            android:layout_width="match_parent"
+            android:padding="5dp"
+            android:layout_height="150dp" />
+        <Button android:id="@+id/btnConnect"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="5dp"
+            android:text="Connect Printer"/>
+        <Button android:id="@+id/btnDisconnect"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="5dp"
+            android:text="Disconnect Printer"/>
+        <Button android:id="@+id/btnPrint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="5dp"
+            android:text="Print Document"/>
+
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
