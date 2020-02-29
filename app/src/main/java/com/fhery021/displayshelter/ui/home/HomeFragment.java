@@ -1,51 +1,47 @@
 package com.fhery021.displayshelter.ui.home;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.fhery021.displayshelter.R;
+import com.mazenrashed.printooth.Printooth;
+import com.mazenrashed.printooth.data.printable.ImagePrintable;
+import com.mazenrashed.printooth.data.printable.Printable;
+import com.mazenrashed.printooth.data.printable.RawPrintable;
+import com.mazenrashed.printooth.data.printable.TextPrintable;
+import com.mazenrashed.printooth.data.printer.DefaultPrinter;
+import com.mazenrashed.printooth.ui.ScanningActivity;
+import com.mazenrashed.printooth.utilities.Printing;
+import com.mazenrashed.printooth.utilities.PrintingCallback;
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Set;
-import java.util.UUID;
+import java.util.ArrayList;
 
-public class HomeFragment extends Fragment {
+public class HomeFragment extends Fragment implements PrintingCallback {
+
+//    private static final String IMAGE_PATH = "https://i.pinimg.com/originals/1b/ac/c8/1bacc8228c85601ee877900ee86adceb.png";
+
+    private static final String IMAGE_PATH = "https://i.ya-webdesign.com/images/small-circle-png-9.png";
 
     private HomeViewModel homeViewModel;
 
-    BluetoothAdapter bluetoothAdapter;
-    BluetoothSocket bluetoothSocket;
-    BluetoothDevice bluetoothDevice;
-
-    OutputStream outputStream;
-    InputStream inputStream;
-    Thread thread;
-
-    byte[] readBuffer;
-    int readBufferPosition;
-    volatile boolean stopWorker;
-
-    TextView lblPrinterName;
-    EditText textBox;
-
+    Printing printing;
+    Button btn_pair_unpair, btn_print, btn_print_image;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -60,165 +56,168 @@ public class HomeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Object of controls
-        Button btnConnect = (Button) view.findViewById(R.id.btnConnect);
-        Button btnDisconnect = (Button) view.findViewById(R.id.btnDisconnect);
-        Button btnPrint = (Button) view.findViewById(R.id.btnPrint);
+        Picasso.get().setLoggingEnabled(true);
 
-        textBox = (EditText) view.findViewById(R.id.txtText);
+        if (Printooth.INSTANCE.hasPairedPrinter())
+            printing = Printooth.INSTANCE.printer();
 
-        lblPrinterName = (TextView) view.findViewById(R.id.lblPrinterName);
+        initView(view);
 
-        btnConnect.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    findBluetoothDevice();
-                    openBluetoothPrinter();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-        });
-        btnDisconnect.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    disconnectBT();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-        });
-        btnPrint.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    printData();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-        });
     }
 
-    void findBluetoothDevice() {
-        try {
-            bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-            if (bluetoothAdapter == null) {
-                lblPrinterName.setText("No bluetooth device found");
-            }
-            if (bluetoothAdapter.isEnabled()) {
-                Intent enableBT = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBT, 0);
-            }
+    private void initView(View view) {
+        btn_print = (Button) view.findViewById(R.id.btnPrint);
+        btn_pair_unpair = (Button) view.findViewById(R.id.btnPairUnpair);
+        btn_print_image = (Button) view.findViewById(R.id.btnPrintImage);
 
-            Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+        if (printing != null) {
+            printing.setPrintingCallback(this);
+        }
+        //Event
+        btn_pair_unpair.setOnClickListener(v -> {
+            if (Printooth.INSTANCE.hasPairedPrinter()) {
+                Printooth.INSTANCE.removeCurrentPrinter();
+            } else {
+                startActivityForResult(new Intent(getActivity(), ScanningActivity.class), ScanningActivity.SCANNING_FOR_PRINTER);
+                changePairAndUnpair();
+            }
+        });
 
-            if (pairedDevices.size() > 0) {
-                for (BluetoothDevice pairedDevice : pairedDevices) {
-                    if (pairedDevice.getName().equals("Portrait2-83979A")) {
-                        bluetoothDevice = pairedDevice;
-                        lblPrinterName.setText("Attached device name: " + pairedDevice.getName()); // TODO
-                        break;
+        btn_print_image.setOnClickListener(v -> {
+            if (!Printooth.INSTANCE.hasPairedPrinter()) {
+                startActivityForResult(new Intent(getActivity(), ScanningActivity.class), ScanningActivity.SCANNING_FOR_PRINTER);
+            } else {
+                printImages();
+            }
+        });
+
+        btn_print.setOnClickListener(v -> {
+            if (!Printooth.INSTANCE.hasPairedPrinter()) {
+                startActivityForResult(new Intent(getActivity(), ScanningActivity.class), ScanningActivity.SCANNING_FOR_PRINTER);
+            } else {
+                printText();
+            }
+        });
+
+        changePairAndUnpair();
+    }
+
+    private void printText() {
+        ArrayList<Printable> printables = new ArrayList<>();
+        printables.add(
+                new RawPrintable.Builder
+                        (new byte[]{27, 100, 4})
+                        .build());
+
+        // add text
+        printables.add(
+                new TextPrintable.Builder()
+                        .setText("Hello")
+                        .setCharacterCode(DefaultPrinter.Companion.getCHARCODE_PC1252())
+                        .setNewLinesAfter(1)
+                        .build());
+
+        // Custom text
+        printables.add(
+                new TextPrintable.Builder()
+                        .setText("Hali")
+                        .setLineSpacing(DefaultPrinter.Companion.getLINE_SPACING_60())
+                        .setAlignment(DefaultPrinter.Companion.getALIGNMENT_CENTER())
+                        .setEmphasizedMode(DefaultPrinter.Companion.getEMPHASIZED_MODE_BOLD())
+                        .setUnderlined(DefaultPrinter.Companion.getUNDERLINED_MODE_ON())
+                        .setNewLinesAfter(1)
+                        .build()
+        );
+    }
+
+    private void printImages() {
+        ArrayList<Printable> printables = new ArrayList<>();
+
+        // load image from the Internet
+        Picasso.get()
+                .load(IMAGE_PATH)
+                .into(new Target() {
+                    @Override
+                    public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                        printables.add(new ImagePrintable.Builder(bitmap).build());
+                        printing.print(printables);
                     }
-                }
-            }
-            lblPrinterName.setText("Bluetooth device attached");
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
 
-    void openBluetoothPrinter() throws IOException {
-        try {
-            UUID uuidString = UUID.fromString("0100"); // TODO
-            bluetoothSocket = bluetoothDevice.createRfcommSocketToServiceRecord(uuidString);
-            bluetoothSocket.connect();
-            outputStream = bluetoothSocket.getOutputStream();
-            inputStream = bluetoothSocket.getInputStream();
-
-            beginListenData();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    void beginListenData() {
-        try {
-            final Handler handler = new Handler();
-            final byte delimiter = 10;
-            stopWorker = false;
-            readBufferPosition = 0;
-            readBuffer = new byte[1024];
-
-            thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    while (!Thread.currentThread().isInterrupted() && !stopWorker) {
-                        try {
-                            int byteAvailable = inputStream.available();
-                            if (byteAvailable > 0) {
-                                byte[] packetByte = new byte[byteAvailable];
-                                inputStream.read(packetByte);
-
-                                for (int i = 0; i < byteAvailable; i++) {
-                                    byte b = packetByte[i];
-                                    if (b == delimiter) {
-                                        byte[] encodedByte = new byte[readBufferPosition];
-                                        System.arraycopy(
-                                                readBuffer, 0,
-                                                encodedByte, 0,
-                                                encodedByte.length
-                                        );
-                                        final String data = new String(encodedByte, "US-ASCII");
-                                        readBufferPosition = 0;
-                                        handler.post(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                lblPrinterName.setText(data);
-                                            }
-                                        });
-                                    } else {
-                                        readBuffer[readBufferPosition++] = b;
-                                    }
-                                }
-                            }
-                        } catch (Exception ex) {
-                            stopWorker = true;
-                            ex.printStackTrace();
-                        }
+                    @Override
+                    public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+                        showToast("Failed to load image");
+                        e.printStackTrace();
                     }
-                }
-            });
-            thread.start();
-        } catch (Exception ex) {
-            ex.printStackTrace();
+
+                    @Override
+                    public void onPrepareLoad(Drawable placeHolderDrawable) {
+                        showToast("Loading image");
+                    }
+                });
+    }
+
+    private void changePairAndUnpair() {
+        if (Printooth.INSTANCE.hasPairedPrinter()) {
+            btn_pair_unpair.setText(
+                    new StringBuilder("Unpair ")
+                            .append(Printooth.INSTANCE.getPairedPrinter()
+                                    .getName()
+                                    .toString())
+            );
+        } else {
+            btn_pair_unpair.setText("Pair with Printer");
         }
     }
 
-    // printing text to bt printer
-    void printData() throws IOException {
-        try {
-            String msg = textBox.getText().toString();
-            msg += "\n";
-            outputStream.write(msg.getBytes());
-            lblPrinterName.setText("Printing text ...");
+    @Override
+    public void connectingWithPrinter() {
+        showToast("Connecting...");
+    }
 
-        } catch (Exception ex) {
-            ex.printStackTrace();
+    @Override
+    public void connectionFailed(String s) {
+        showToast("Failure: " + s);
+    }
+
+    @Override
+    public void onError(String s) {
+        showToast("Error: " + s);
+    }
+
+    @Override
+    public void onMessage(String s) {
+        showToast(s);
+    }
+
+    @Override
+    public void printingOrderSentSuccessfully() {
+        showToast("Order sent to device.");
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == ScanningActivity.SCANNING_FOR_PRINTER &&
+                resultCode == ScanningActivity.RESULT_OK) {
+            initPrinting();
+            changePairAndUnpair();
         }
     }
 
-    void disconnectBT() throws IOException {
-        try {
-            stopWorker = true;
-            outputStream.close();
-            inputStream.close();
-            bluetoothSocket.close();
-            lblPrinterName.setText("Device disconnected");
-        } catch (Exception ex) {
-            ex.printStackTrace();
+    private void initPrinting() {
+        if (!Printooth.INSTANCE.hasPairedPrinter()) {
+            printing = Printooth.INSTANCE.printer();
         }
+
+        if (printing != null) {
+            printing.setPrintingCallback(this);
+        }
+    }
+
+    private void showToast(String msg) {
+        Context context = getActivity().getApplicationContext();
+        CharSequence text = msg;
+
+        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
     }
 }
