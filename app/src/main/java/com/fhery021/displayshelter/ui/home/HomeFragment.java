@@ -38,6 +38,8 @@ public class HomeFragment extends Fragment implements PrintingCallback {
 
     private static final String IMAGE_PATH = "https://i.ya-webdesign.com/images/small-circle-png-9.png";
 
+    //    private static final String IMAGE_PATH = R.drawable.ic_android_black_24dp;
+
     private HomeViewModel homeViewModel;
 
     Printing printing;
