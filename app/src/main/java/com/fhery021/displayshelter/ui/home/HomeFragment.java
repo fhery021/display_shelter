@@ -34,24 +34,22 @@ import java.util.ArrayList;
 
 public class HomeFragment extends Fragment implements PrintingCallback {
 
-//    private static final String IMAGE_PATH = "https://i.pinimg.com/originals/1b/ac/c8/1bacc8228c85601ee877900ee86adceb.png";
-
-    private static final String IMAGE_PATH = "https://i.ya-webdesign.com/images/small-circle-png-9.png";
-
-    //    private static final String IMAGE_PATH = R.drawable.ic_android_black_24dp;
-
-    private HomeViewModel homeViewModel;
+    // direct net path
+    // private static final String IMAGE_PATH = "https://i.ya-webdesign.com/images/small-circle-png-9.png";
+    // firebase png
+     private static final String IMAGE_PATH = "https://firebasestorage.googleapis.com/v0/b/mysvgprovider.appspot.com/o/small-circle-png-9%5B1%5D.png?alt=media&token=efc981c6-4f1b-47f3-a7b8-8a256cc50db7";
+    // firebase svg
+//    private static final String IMAGE_PATH = "https://firebasestorage.googleapis.com/v0/b/mysvgprovider.appspot.com/o/small-circle-png-9_1_.svg?alt=media&token=ea7ec6a1-e529-4050-8719-e1d3ee4a56ee";
 
     Printing printing;
     Button btn_pair_unpair, btn_print, btn_print_image;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        homeViewModel =
+        HomeViewModel homeViewModel =
                 ViewModelProviders.of(this).get(HomeViewModel.class);
-        View root = inflater.inflate(R.layout.fragment_home, container, false);
 
-        return root;
+        return inflater.inflate(R.layout.fragment_home, container, false);
     }
 
     @Override
@@ -68,9 +66,9 @@ public class HomeFragment extends Fragment implements PrintingCallback {
     }
 
     private void initView(View view) {
-        btn_print = (Button) view.findViewById(R.id.btnPrint);
-        btn_pair_unpair = (Button) view.findViewById(R.id.btnPairUnpair);
-        btn_print_image = (Button) view.findViewById(R.id.btnPrintImage);
+        btn_print = view.findViewById(R.id.btnPrint);
+        btn_pair_unpair = view.findViewById(R.id.btnPairUnpair);
+        btn_print_image = view.findViewById(R.id.btnPrintImage);
 
         if (printing != null) {
             printing.setPrintingCallback(this);
@@ -142,7 +140,10 @@ public class HomeFragment extends Fragment implements PrintingCallback {
                     @Override
                     public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
                         printables.add(new ImagePrintable.Builder(bitmap).build());
-                        printing.print(printables);
+//                        printing.print(printables);
+                        // TODO TRY THIS:
+                        Printooth.INSTANCE.printer().print(printables);
+
                     }
 
                     @Override
