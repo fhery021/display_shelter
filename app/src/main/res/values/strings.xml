@@ -4,4 +4,12 @@
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
+
+    <string name="status">Status:</string>
+    <string name="paired">Paired</string>
+    <string name="not_paired">Not paired</string>
+    <string name="pair">Pair</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="print">Print</string>
+
 </resources>
