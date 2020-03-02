@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -37,7 +36,7 @@ public class HomeFragment extends Fragment implements PrintingCallback {
     // direct net path
     // private static final String IMAGE_PATH = "https://i.ya-webdesign.com/images/small-circle-png-9.png";
     // firebase png
-     private static final String IMAGE_PATH = "https://firebasestorage.googleapis.com/v0/b/mysvgprovider.appspot.com/o/small-circle-png-9%5B1%5D.png?alt=media&token=efc981c6-4f1b-47f3-a7b8-8a256cc50db7";
+    private static final String IMAGE_PATH = "https://firebasestorage.googleapis.com/v0/b/mysvgprovider.appspot.com/o/small-circle-png-9%5B1%5D.png?alt=media&token=efc981c6-4f1b-47f3-a7b8-8a256cc50db7";
     // firebase svg
 //    private static final String IMAGE_PATH = "https://firebasestorage.googleapis.com/v0/b/mysvgprovider.appspot.com/o/small-circle-png-9_1_.svg?alt=media&token=ea7ec6a1-e529-4050-8719-e1d3ee4a56ee";
 
@@ -128,6 +127,9 @@ public class HomeFragment extends Fragment implements PrintingCallback {
                         .setNewLinesAfter(1)
                         .build()
         );
+        // TODO TRY PRINTING TEXT
+        // printing.print(printables);
+        Printooth.INSTANCE.printer().print(printables);
     }
 
     private void printImages() {
@@ -140,8 +142,18 @@ public class HomeFragment extends Fragment implements PrintingCallback {
                     @Override
                     public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
                         printables.add(new ImagePrintable.Builder(bitmap).build());
-//                        printing.print(printables);
+////                        printing.print(printables);
+//                        // TODO TRY THIS:
+//                        Printooth.INSTANCE.printer().print(printables);
+
                         // TODO TRY THIS:
+                        // version 2
+//                        PrintHelper photoPrinter = new PrintHelper(getActivity());
+//                        photoPrinter.setScaleMode(PrintHelper.SCALE_MODE_FIT);
+//                        photoPrinter.printBitmap("circle - test print", bitmap);
+
+//                        outputStream.write(PrinterCommands.ESC_ALIGN_CENTER);
+//                        printText(command);
                         Printooth.INSTANCE.printer().print(printables);
 
                     }
@@ -158,6 +170,16 @@ public class HomeFragment extends Fragment implements PrintingCallback {
                     }
                 });
     }
+
+    //https://developer.android.com/training/printing/photos
+
+//    private void doPhotoPrint() {
+//        PrintHelper photoPrinter = new PrintHelper(getActivity());
+//        photoPrinter.setScaleMode(PrintHelper.SCALE_MODE_FIT);
+//        Bitmap bitmap = BitmapFactory.decodeResource(getResources(),
+//                R.drawable.droids);
+//        photoPrinter.printBitmap("droids.jpg - test print", bitmap);
+//    }
 
     private void changePairAndUnpair() {
         if (Printooth.INSTANCE.hasPairedPrinter()) {
